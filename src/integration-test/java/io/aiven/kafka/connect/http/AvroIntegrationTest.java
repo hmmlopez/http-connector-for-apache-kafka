@@ -52,6 +52,7 @@ import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
@@ -81,7 +82,7 @@ public class AvroIntegrationTest {
     private static File pluginsDir;
 
     @Container
-    private final KafkaContainer kafka = new KafkaContainer()
+    private final KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.0.0"))
             .withNetwork(Network.newNetwork())
             .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "false");
 
@@ -109,7 +110,7 @@ public class AvroIntegrationTest {
         final File distFile = new File(System.getProperty("integration-test.distribution.file.path"));
         assert distFile.exists();
         final String cmd = String.format("tar -xf %s --strip-components=1 -C %s",
-                distFile.toString(), transformDir.toString());
+                distFile, transformDir);
         final Process p = Runtime.getRuntime().exec(cmd);
         assert p.waitFor() == 0;
     }
