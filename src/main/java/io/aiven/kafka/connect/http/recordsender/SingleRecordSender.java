@@ -16,15 +16,20 @@
 
 package io.aiven.kafka.connect.http.recordsender;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collection;
 
+import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 import io.aiven.kafka.connect.http.sender.HttpSender;
 
 final class SingleRecordSender extends RecordSender {
 
-    protected SingleRecordSender(final HttpSender httpSender) {
+    SingleRecordSender(final HttpSender httpSender) {
         super(httpSender);
     }
 
@@ -32,8 +37,25 @@ final class SingleRecordSender extends RecordSender {
     public void send(final Collection<SinkRecord> records) {
         for (final SinkRecord record : records) {
             final String body = recordValueConverter.convert(record);
-            httpSender.send(body);
+            final URI runtimeUri = getRuntimeUri(record);
+            if (runtimeUri != null) {
+                httpSender.send(body, runtimeUri);
+            } else {
+                httpSender.send(body);
+            }
         }
+    }
+
+    private URI getRuntimeUri(final SinkRecord record) {
+        final Header customHttpUrl = record.headers().lastWithName("custom_http_url");
+        if (customHttpUrl != null) {
+            try {
+                return new URL((String) customHttpUrl.value()).toURI();
+            } catch (MalformedURLException | URISyntaxException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
 }

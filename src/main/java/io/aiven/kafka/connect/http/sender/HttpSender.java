@@ -17,6 +17,7 @@
 package io.aiven.kafka.connect.http.sender;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -65,6 +66,15 @@ public class HttpSender {
         final var requestBuilder =
                 httpRequestBuilder
                         .build(config)
+                        .POST(HttpRequest.BodyPublishers.ofString(body));
+        sendWithRetries(requestBuilder, HttpResponseHandler.ON_HTTP_ERROR_RESPONSE_HANDLER);
+    }
+
+    public final void send(final String body, final URI uri) {
+        final var requestBuilder =
+                httpRequestBuilder
+                        .build(config)
+                        .uri(uri)
                         .POST(HttpRequest.BodyPublishers.ofString(body));
         sendWithRetries(requestBuilder, HttpResponseHandler.ON_HTTP_ERROR_RESPONSE_HANDLER);
     }
